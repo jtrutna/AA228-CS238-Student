@@ -1,6 +1,8 @@
+import argparse
 import sys
 
-import networkx
+import networkx as nx
+import pandas as pd
 
 
 def write_gph(dag, idx2names, filename):
@@ -9,20 +11,29 @@ def write_gph(dag, idx2names, filename):
             f.write("{}, {}\n".format(idx2names[edge[0]], idx2names[edge[1]]))
 
 
+def prior(G, r_i):
+    n = G.number_of_nodes()
+
+
 def compute(infile, outfile):
-    # WRITE YOUR CODE HERE
-    # FEEL FREE TO CHANGE ANYTHING ANYWHERE IN THE CODE
-    # THIS INCLUDES CHANGING THE FUNCTION NAMES, MAKING THE CODE MODULAR, BASICALLY ANYTHING
-    pass
+    df = pd.read_csv(infile, index_col=False)
+    # Get nodes in a form that DiGraph can easily digest (with labels)
+    # nodes = {0: {'label': 'age', 'm': 3}, 1: {'label': 'portembarked', 'm': 3}, ...
+    nodes = df.nunique().to_frame('m').reset_index().rename(columns={'index': 'label'})
+    G = nx.DiGraph()
+    G.add_nodes_from(nodes)
+    print(G.nodes[1])
+    r_i = df.nunique()
+
 
 
 def main():
-    if len(sys.argv) != 3:
-        raise Exception("usage: python project1.py <infile>.csv <outfile>.gph")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--infile', type=argparse.FileType('r'), default='data/small.csv')
+    parser.add_argument('--outfile', type=argparse.FileType('w'), default='out.gph')
+    args = parser.parse_args()
 
-    inputfilename = sys.argv[1]
-    outputfilename = sys.argv[2]
-    compute(inputfilename, outputfilename)
+    compute(infile=args.infile, outfile=args.outfile)
 
 
 if __name__ == '__main__':
