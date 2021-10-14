@@ -15,6 +15,7 @@ def write_gph(dag, idx2names, filename):
 
 
 def parents(i, G):
+    # TODO: Check that i < G.nodes.length
     # G.adjacency => {0: {}, 1: {2: {}}} where 1=>2
     return [k for k, v in G.adj.items() if i in v]
 
@@ -24,7 +25,7 @@ def parental_instantiations(n, G, r_i):
     # G.adjacency => {0: {}, 1: {2: {}}} where 1=>2
     for k, children in G.adjacency():
         for child in children.keys():
-            q_i[child] *= r_i[child]
+            q_i[child] *= r_i[k]
     return q_i
 
 
@@ -43,8 +44,8 @@ def evidence_counts_by_ijk(n, G, r_i, D):
             j = 0
             ps = parents(i, G)
             if len(ps) > 0:
-                parent_values = [row[i] for i in parents(i, G)]
-                parent_rs = [r_i[i] for i in parents(i, G)]
+                parent_values = [row[j] for j in parents(i, G)]
+                parent_rs = [r_i[j] for j in parents(i, G)]
                 # parential instantiations of X_i can be thought of a w-dimensional matrix where w
                 # is the number of parents of X_i and the d-dimension can take r_i values.
                 # q_i is this flattened, so we calculate where [i_1, i_2, ..., i_h] is in flattened
