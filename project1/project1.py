@@ -8,10 +8,9 @@ import pandas as pd
 from scipy.special import loggamma
 
 
-def write_gph(dag, idx2names, filename):
-    with open(filename, 'w') as f:
-        for edge in dag.edges():
-            f.write("{}, {}\n".format(idx2names[edge[0]], idx2names[edge[1]]))
+def write_gph(dag, idx2names, file):
+    for edge in dag.edges():
+        file.write("{}, {}\n".format(idx2names[edge[0]], idx2names[edge[1]]))
 
 
 def parents(i, G):
@@ -108,30 +107,27 @@ def fit(n, G, r_i, D):
 
 def compute(infile, outfile):
     D_raw = pd.read_csv(infile, index_col=False, dtype="category")
+    # XXX:For simpler internals and since we're not actually outputting field values
+    #     we replace each field with an index k into the possible values for that column.
     n = len(D_raw.columns)
-
-    # XXX:For simpler internals, we replace each value with an index k for the
-    # k-th possible value for that column
-    variable_denormalize = {i: D_raw.iloc[:,i].cat.categories for i in range(n)}
     D = D_raw.apply(lambda x: x.cat.codes)
-    
     r_i = D.nunique()
-
     G = nx.DiGraph()
     G.add_nodes_from(range(n))
 
     Gp = fit(n, G, r_i, D)
+    print(Gp)
 
-    return Gp
+    write_gph(Gp, D.columns, outfile)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--infile', type=argparse.FileType('r'), default='data/small.csv')
+    parser.add_argument('--infile', type=argparse.FileType('r'), default='data/toy.csv')
     parser.add_argument('--outfile', type=argparse.FileType('w'), default='out.gph')
     args = parser.parse_args()
 
-    print(compute(infile=args.infile, outfile=args.outfile))
+    compute(infile=args.infile, outfile=args.outfile)
 
 
 if __name__ == '__main__':
