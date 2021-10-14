@@ -1,4 +1,5 @@
 import argparse
+from os.path import basename
 from random import randrange
 import sys
 
@@ -8,9 +9,9 @@ import pandas as pd
 from scipy.special import loggamma
 
 
-def write_gph(dag, idx2names, file):
+def write_gph(dag, idx2names, outfile):
     for edge in dag.edges():
-        file.write("{}, {}\n".format(idx2names[edge[0]], idx2names[edge[1]]))
+        outfile.write("{}, {}\n".format(idx2names[edge[0]], idx2names[edge[1]]))
 
 
 def parents(i, G):
@@ -91,9 +92,9 @@ def _has_cycle(G):
         return False
 
 
-def fit(n, G, r_i, D):
+def fit(n, G, r_i, D, iterations=10):
     current_score = bayscore(n, G, r_i, D)
-    for _ in range(10):
+    for _ in range(iterations):
         print(f"{G.edges()}:{current_score}")
         candidate_G = _random_neighbor(n, G, r_i, D)
         if _has_cycle(candidate_G):
@@ -123,11 +124,16 @@ def compute(infile, outfile):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--infile', type=argparse.FileType('r'), default='data/toy.csv')
-    parser.add_argument('--outfile', type=argparse.FileType('w'), default='out.gph')
+    parser.add_argument('--input', type=argparse.FileType('r'), default='data/toy.csv')
+    parser.add_argument('--output')
     args = parser.parse_args()
 
-    compute(infile=args.infile, outfile=args.outfile)
+
+    if args.output is None:
+        output = basename(args.input.name).replace('.csv', '') + '.gph'
+
+    with open(output, 'w') as f:
+        compute(infile=args.input, outfile=f)
 
 
 if __name__ == '__main__':
