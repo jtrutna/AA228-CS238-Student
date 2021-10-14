@@ -52,9 +52,6 @@ def evidence_counts_by_ijk(n, G, r_i, D):
     return m_ijk
 
 
-def _bayesian_score_for_ij(M_ij, a_ij):
-    p = sum()
-
     # TODO: 
 def compute(infile, outfile):
     D_raw = pd.read_csv(infile, index_col=False, dtype="category")
@@ -69,13 +66,22 @@ def compute(infile, outfile):
 
     G = nx.DiGraph()
     G.add_nodes_from(range(n))
+    G.add_edge(1,0)
 
-    a = prior(n, G, r_i)
+    a_ijk = prior(n, G, r_i)
     # TODO: Check for order of columns
     m_ijk = evidence_counts_by_ijk(n, G, r_i, D)
 
-    print(m_ijk)
+    score = sum(bayescore_for_i(m_ijk[i], a_ijk[i]) for i in range(n))
+    return score
 
+
+def bayescore_for_i(m_jk, a_jk):
+    score = np.sum(loggamma(np.sum(a_jk, axis=1)))
+    score -= np.sum(loggamma(np.sum(a_jk, axis=1) + np.sum(m_jk, axis=1)))
+    score += np.sum(loggamma(a_jk + m_jk))
+    score -= np.sum(loggamma(a_jk))
+    return score
 
 
 def main():
@@ -84,7 +90,7 @@ def main():
     parser.add_argument('--outfile', type=argparse.FileType('w'), default='out.gph')
     args = parser.parse_args()
 
-    compute(infile=args.infile, outfile=args.outfile)
+    print(compute(infile=args.infile, outfile=args.outfile))
 
 
 if __name__ == '__main__':
