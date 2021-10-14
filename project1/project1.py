@@ -36,7 +36,7 @@ def evidence_counts_by_ijk(n, G, r_i, D):
     # Number of times each node, parential instantiation, and node value appears in D
     q_i = parental_instantiations(n, G, r_i)
     m_ijk = [np.zeros([q_i[i], r_i[i]]) for i in range(n)]
-    for row in D.itertuples():
+    for row in D.itertuples(index=False):
         for i in range(n):
             k = row[i]
             j = 0
@@ -57,8 +57,14 @@ def _bayesian_score_for_ij(M_ij, a_ij):
 
     # TODO: 
 def compute(infile, outfile):
-    D = pd.read_csv(infile, index_col=False)
-    n = len(D.columns)
+    D_raw = pd.read_csv(infile, index_col=False, dtype="category")
+    n = len(D_raw.columns)
+
+    # XXX:For simpler internals, we replace each value with an index k for the
+    # k-th possible value for that column
+    variable_denormalize = {i: D_raw.iloc[:,i].cat.categories for i in range(n)}
+    D = D_raw.apply(lambda x: x.cat.codes)
+    
     r_i = D.nunique()
 
     G = nx.DiGraph()
@@ -68,10 +74,7 @@ def compute(infile, outfile):
     # TODO: Check for order of columns
     m_ijk = evidence_counts_by_ijk(n, G, r_i, D)
 
-
-    print(parents(2, G))
-
-    print(prior(n, G, r_i))
+    print(m_ijk)
 
 
 
